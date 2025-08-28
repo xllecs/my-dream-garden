@@ -1,0 +1,59 @@
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  userId       String @id @default(uuid())
+  firstName    String
+  lastName     String
+  age          Int? // i guess age should not be required
+  emailAddress String @unique
+  gardens      Garden[]
+}
+
+model Garden {
+  gardenId            String @id @default(uuid())
+  gardenName          String
+  totalSurfaceArea    Float
+  locationDescription String
+
+  userId              String
+  user                User @relation(fields: [userId], references: [userId])
+
+  plants              Plant[]
+}
+
+model Plant {
+  plantId             String @id @default(uuid())
+  plantName           String
+  species             String
+  plantType           PlantType
+  plantationDate      DateTime
+  surfaceAreaRequired Float
+  idealHumidityLevel  Float
+
+  gardenId            String
+  garden              Garden @relation(fields: [gardenId], references: [gardenId])
+
+  metrics             RealtimePlantMetric? // might not be available right off the bat
+}
+
+enum PlantType {
+  vegetable
+  fruit
+  flower
+}
+
+model RealtimePlantMetric {
+  plantId                 String @id
+  plant                   Plant @relation(fields: [plantId], references: [plantId])
+
+  lastIrrigationStartTime DateTime? // these might not exist yet when a plant is first added
+  lastIrrigationEndTime   DateTime?
+  currentHumidityLevel    Float?
+}
