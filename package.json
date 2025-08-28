@@ -1,13 +1,13 @@
 {
   "name": "my-dream-garden",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx src/server.ts",
-    "start": "tsc -p tsconfig.json && node dist/server.js",
-    "prisma:generate": "prisma generate",
-    "prisma:dev": "prisma migrate dev --name init",
+    "dev": "tsx src/Server.ts",
+    "build": "tsc",
+    "start": "node dist/Server.js",
+    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "prisma:migrate:prod": "prisma migrate deploy --schema=./prisma/schema.prisma",
     "prisma:studio": "prisma studio"
   },
   "keywords": [],
