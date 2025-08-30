@@ -3,8 +3,7 @@ services:
     build: .
     ports:
       - 3000:3000
-    environment:
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/my_dream_garden_db"
+    env_file: ./.env
     depends_on:
       db:
         condition: service_healthy
