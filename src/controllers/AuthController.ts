@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../Prisma.js";
-import { hashPassword } from "../utils/AuthUtils.js";
+import { comparePassword, generateAccessToken, hashPassword } from "../utils/AuthUtils.js";
 
 export async function register(request: Request, response: Response) {
   const { firstName, lastName, emailAddress, password } = request.body
@@ -30,4 +30,25 @@ export async function register(request: Request, response: Response) {
   })
 
   return response.status(201).json({ message: "user created successfully", user })
+}
+
+export async function login(request: Request, response: Response) {
+  const { emailAddress, password } = request.body
+
+  let errMessage = []
+
+  if (!emailAddress) errMessage.push("emailAddress")
+  if (!password) errMessage.push("password")
+
+  if (errMessage.length !== 0) return response.status(400).json({ error: "the following credentials were not provided: " + errMessage.join(", ") })
+
+  const user = await prisma.user.findUnique({ where: { emailAddress } })
+  if (!user) return response.status(401).json({ error: "invalid email or password" })
+
+  const ok = await comparePassword(password, user.passwordHash)
+  if (!ok) return response.status(401).json({ error: "invalid email or password" })
+
+  const token = generateAccessToken({ userId: user.userId })
+
+  return response.json({ message: "logged in succesfully", accessToken: token })
 }
