@@ -1,6 +1,7 @@
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url = env("DATABASE_URL_LOCAL")
+  // url = env("DATABASE_URL")
 }
 
 generator client {
@@ -13,6 +14,9 @@ model User {
   lastName     String
   age          Int? // i guess age should not be required
   emailAddress String @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   gardens      Garden[]
 }
 
@@ -21,9 +25,10 @@ model Garden {
   gardenName          String
   totalSurfaceArea    Float
   locationDescription String
+  targetHumidityLevel Int @default(0)
 
   userId              String
-  user                User @relation(fields: [userId], references: [userId])
+  user                User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   plants              Plant[]
 }
@@ -38,7 +43,7 @@ model Plant {
   idealHumidityLevel  Float
 
   gardenId            String
-  garden              Garden @relation(fields: [gardenId], references: [gardenId])
+  garden              Garden @relation(fields: [gardenId], references: [gardenId], onDelete: Cascade)
 
   metrics             RealtimePlantMetric? // might not be available right off the bat
 }
