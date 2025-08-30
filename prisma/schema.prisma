@@ -56,7 +56,7 @@ enum PlantType {
 
 model RealtimePlantMetric {
   plantId                 String @id
-  plant                   Plant @relation(fields: [plantId], references: [plantId])
+  plant                   Plant @relation(fields: [plantId], references: [plantId], onDelete: Cascade)
 
   lastIrrigationStartTime DateTime? // these might not exist yet when a plant is first added
   lastIrrigationEndTime   DateTime?
