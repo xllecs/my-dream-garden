@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../Prisma.js";
-import { comparePassword, generateAccessToken, hashPassword } from "../utils/AuthUtils.js";
+import { comparePassword, generateAccessToken, hashPassword, validateAccessToken } from "../utils/AuthUtils.js";
 
 export async function register(request: Request, response: Response) {
   const { firstName, lastName, emailAddress, password } = request.body
@@ -51,4 +51,20 @@ export async function login(request: Request, response: Response) {
   const token = generateAccessToken({ userId: user.userId })
 
   return response.json({ message: "logged in succesfully", accessToken: token })
+}
+
+export async function deleteAccount(request: Request, response: Response) {
+  const userId = (request as any).user.userId
+
+  const { password } = request.body
+  if (!password) return response.status(400).json({ error: "password is required" })
+
+  const user = await prisma.user.findUnique({ where: { userId } })
+
+  const ok = await comparePassword(password, user!.passwordHash)
+  if (!ok) return response.status(401).json({ error: "invalid password" })
+
+  await prisma.user.delete({ where: { userId } })
+
+  return response.json({ error: "user deleted successfully" })
 }
