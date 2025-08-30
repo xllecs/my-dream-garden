@@ -8,6 +8,8 @@ import plantsRouter from "./routes/PlantsRoutes.js"
 
 import { validateAccessToken } from "./utils/AuthUtils.js"
 
+import './jobs/PlantsHumidityJob.js'
+
 dotenv.config()
 
 const app = express()

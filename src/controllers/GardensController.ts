@@ -4,13 +4,12 @@ import { redisClient } from "../Caching.js"
 
 // list a specific garden that belongs to the logged in user
 export async function viewGarden(request: Request, response: Response) {
-  const userId = (request as any).user.userId
   const { gardenId } = request.body
 
   if (!gardenId) return response.status(400).json({ error: "gardenId not provided" })
 
   // verify cache
-  const gardenCacheKey = `garden:${userId}`
+  const gardenCacheKey = `garden:${gardenId}`
   const cachedGarden = await redisClient.get(gardenCacheKey)
 
   if (cachedGarden) return response.json({ cachedGarden: JSON.parse(cachedGarden) })
@@ -53,6 +52,7 @@ export async function createGarden(request: Request, response: Response) {
   if (!gardenName) errMessage.push("gardenName")
   if (!totalSurfaceArea) errMessage.push("totalSurfaceArea")
   if (!locationDescription) errMessage.push("locationDescription")
+  if (!targetHumidityLevel) errMessage.push("targetHumidityLevel")
 
   if (errMessage.length !== 0) return response.status(400).json({ error: "the following fields were not provided: " + errMessage.join(", ") })
 
@@ -116,9 +116,11 @@ export async function deleteGarden(request: Request, response: Response) {
 
   if (!gardenId) return response.status(400).json({ error: "gardenId not provided" })
 
-  const garden = await prisma.garden.findFirst({ where: { userId, gardenId }})
+  const garden = await prisma.garden.findFirst({ where: { gardenId }})
 
   if (!garden) return response.status(404).json({ error: "garden not found" })
+
+  if (garden.userId !== userId) return response.status(400).json({ error: "you cannot delete this garden as it does not belong to you" })
 
   const cachedGardenKey = `garden:${gardenId}`
   const cachedGardensKey = `gardens:${userId}`

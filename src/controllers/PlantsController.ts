@@ -71,6 +71,7 @@ export async function createPlant(request: Request, response: Response) {
   if (!plantationDate) errMessage.push("plantationDate")
   if (!surfaceAreaRequired) errMessage.push("surfaceAreaRequired")
   if (!idealHumidityLevel) errMessage.push("idealHumidityLevel")
+  if (!gardenId) errMessage.push("gardenId")
 
   if (errMessage.length !== 0) return response.status(400).json({ error: "the following fields were not provided: " + errMessage.join(", ") })
 
@@ -78,7 +79,7 @@ export async function createPlant(request: Request, response: Response) {
   // the garden's surface along with the rest of the plants
   const currentPlants = garden.plants
   const totalSurfaceOccupied = currentPlants.reduce((acc, plant) => acc += plant.surfaceAreaRequired, 0)
-  if (totalSurfaceOccupied + surfaceAreaRequired > garden.totalSurfaceArea) return response.status(400).json({ error: `garden's surface (${garden.totalSurfaceArea}m2) exceeded` })
+  if (totalSurfaceOccupied + surfaceAreaRequired > garden.totalSurfaceArea) return response.status(400).json({ error: `garden's surface (${garden.totalSurfaceArea} m2) exceeded. space occupied so far: ${totalSurfaceOccupied} m2` })
 
   const plantsCacheKey = `plants:${gardenId}`
 
@@ -102,6 +103,7 @@ export async function createPlant(request: Request, response: Response) {
 
 // update a plant in a garden that belongs to the logged in user
 export async function updatePlant(request: Request, response: Response) {
+  const userId = (request as any).user.userId
   const {
     plantId,
     plantName,
@@ -118,11 +120,12 @@ export async function updatePlant(request: Request, response: Response) {
 
   if (!plant) return response.status(404).json({ error: "plant not found" })
 
+  if (plant.garden.userId !== userId) return response.status(400).json({ error: "this is not your plant" })
+
   // checking if the new surfaceAreaRequired value (if any) is still in
   // the garden's surface along with the rest of the plants
-  const otherPlants = plant.garden.plants.filter(plant => plant.plantId !== plantId)
-  const totalSurfaceOccupied = otherPlants.reduce((acc, plant) => acc += plant.surfaceAreaRequired, 0)
-  if (totalSurfaceOccupied + surfaceAreaRequired > plant.garden.totalSurfaceArea) return response.status(400).json({ error: `garden's surface (${plant.garden.totalSurfaceArea}m2) exceeded` })
+  const totalSurfaceOccupied = plant.garden.plants.reduce((acc, plant) => acc += plant.surfaceAreaRequired, 0)
+  if (totalSurfaceOccupied + surfaceAreaRequired > plant.garden.totalSurfaceArea) return response.status(400).json({ error: `garden's surface (${plant.garden.totalSurfaceArea} m2) exceeded. space occupied so far: ${totalSurfaceOccupied} m2` })
 
   const plantCacheKey = `plant:${plant.plantId}`
   const plantsCacheKey = `plants:${plant.gardenId}`
@@ -147,13 +150,16 @@ export async function updatePlant(request: Request, response: Response) {
 
 // delete a plant from a garden that belongs to the logged in user
 export async function deletePlant(request: Request, response: Response) {
+  const userId = (request as any).user.userId
   const { plantId } = request.body
 
   if (!plantId) return response.status(400).json({ error: "plantId not provided" })
 
-  const plant = await prisma.plant.findFirst({ where: { plantId }})
+  const plant = await prisma.plant.findFirst({ where: { plantId }, include: { garden: true }})
 
   if (!plant) return response.status(404).json({ error: "plant not found" })
+
+  if (plant.garden.userId !== userId) return response.status(400).json({ error: "this is not your plant" })
 
   const plantCacheKey = `plants:${plant.plantId}`
   const plantsCacheKey = `plants:${plant.gardenId}`
