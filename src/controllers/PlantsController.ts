@@ -17,7 +17,7 @@ export async function viewPlant(request: Request, response: Response) {
 
   if (!plant) return response.status(404).json({ error: "plant not found" })
 
-  await redisClient.set(plantCacheKey, JSON.stringify(plant), { EX: 10 })
+  await redisClient.set(plantCacheKey, JSON.stringify(plant), { EX: 600 })
 
   return response.json({ plant })
 }
@@ -40,7 +40,7 @@ export async function listPlants(request: Request, response: Response) {
   const { plants } = garden
 
   if (plants.length > 0) {
-    await redisClient.set(plantsCacheKey, JSON.stringify(plants), { EX: 10 })
+    await redisClient.set(plantsCacheKey, JSON.stringify(plants), { EX: 600 })
     return response.json({ plants })
   }
 
@@ -96,7 +96,7 @@ export async function createPlant(request: Request, response: Response) {
   })
 
   await redisClient.del(plantsCacheKey)
-  await redisClient.set(`plant:${plant.plantId}`, JSON.stringify(plant), { EX: 10 })
+  await redisClient.set(`plant:${plant.plantId}`, JSON.stringify(plant), { EX: 600 })
 
   return response.status(201).json({ message: "plant created successfully", plant })
 }
@@ -120,7 +120,7 @@ export async function updatePlant(request: Request, response: Response) {
 
   if (!plant) return response.status(404).json({ error: "plant not found" })
 
-  if (plant.garden.userId !== userId) return response.status(400).json({ error: "this is not your plant" })
+  if (plant.garden.userId !== userId) return response.status(403).json({ error: "this is not your plant" })
 
   // checking if the new surfaceAreaRequired value (if any) is still in
   // the garden's surface along with the rest of the plants
@@ -159,7 +159,7 @@ export async function deletePlant(request: Request, response: Response) {
 
   if (!plant) return response.status(404).json({ error: "plant not found" })
 
-  if (plant.garden.userId !== userId) return response.status(400).json({ error: "this is not your plant" })
+  if (plant.garden.userId !== userId) return response.status(403).json({ error: "this is not your plant" })
 
   const plantCacheKey = `plants:${plant.plantId}`
   const plantsCacheKey = `plants:${plant.gardenId}`

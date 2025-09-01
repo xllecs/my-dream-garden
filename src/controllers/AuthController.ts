@@ -66,5 +66,5 @@ export async function deleteAccount(request: Request, response: Response) {
 
   await prisma.user.delete({ where: { userId } })
 
-  return response.json({ error: "user deleted successfully" })
+  return response.json({ message: "user deleted successfully" })
 }
