@@ -8,6 +8,7 @@ import authRouter from "./routes/AuthRoutes.js"
 import healthChecksRouter from "./routes/HealthChecks.js"
 import gardensRouter from "./routes/GardensRoutes.js"
 import plantsRouter from "./routes/PlantsRoutes.js"
+import realtimeMetricsRouter from "./routes/RealtimePlantMetricsRoutes.js"
 
 import { validateAccessToken } from "./utils/AuthUtils.js"
 
@@ -32,7 +33,7 @@ const swaggerOptions = {
       }
     }
   },
-  apis: ["./src/docs/AuthDocs.ts", "./src/docs/GardensDocs.ts", "./src/docs/PlantsDocs.ts"]
+  apis: ["./src/docs/AuthDocs.ts", "./src/docs/GardensDocs.ts", "./src/docs/PlantsDocs.ts", './src/docs/RealtimePlantMetricsDocs.ts']
 }
 
 const app = express()
@@ -47,5 +48,6 @@ app.use("/auth", authRouter)
 app.use("/healthchecks", healthChecksRouter)
 app.use("/gardens", validateAccessToken, gardensRouter)
 app.use("/plants", validateAccessToken, plantsRouter)
+app.use("/metrics", realtimeMetricsRouter)
 
 app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`))

@@ -19,7 +19,7 @@
  *                 type: string
  *               lastName:
  *                 type: string
- *               email:
+ *               emailAddress:
  *                 type: string
  *                 format: email
  *               password:
@@ -77,10 +77,10 @@
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - emailAddress
  *               - password
  *             properties:
- *               email:
+ *               emailAddress:
  *                 type: string
  *                 format: email
  *               password:
